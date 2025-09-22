@@ -1,0 +1,658 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Chronotype Test - ค้นพบเวลาทองที่ซ่อนอยู่ในตัวคุณ</title>
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Dancing+Script&display=swap" rel="stylesheet">
+   <style>
+       body {
+           font-family: 'Kanit', sans-serif;
+           background-color: #020617; /* Slate 950 */
+           color: #e2e8f0; /* Slate 200 */
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           min-height: 100vh;
+       }
+     
+       /* Animated Background */
+       #background-aurora {
+           position: fixed;
+           top: 0;
+           left: 0;
+           width: 100%;
+           height: 100vh;
+           background-image:
+               radial-gradient(ellipse 80% 80% at 20% 20%, rgba(30, 64, 175, 0.2), transparent),
+               radial-gradient(ellipse 60% 60% at 80% 70%, rgba(29, 78, 216, 0.2), transparent);
+           animation: aurora-flow 20s infinite alternate ease-in-out;
+           z-index: -1;
+       }
+
+
+       @keyframes aurora-flow {
+           0% { background-position: 0% 50%, 50% 100%; }
+           100% { background-position: 100% 50%, 0% 0%; }
+       }
+
+
+       /* Glassmorphism Card Style */
+       .card {
+           background-color: rgba(15, 23, 42, 0.6); /* Slate 900 with alpha */
+           border: 1px solid rgba(51, 65, 85, 0.5); /* Slate 800 with alpha */
+           backdrop-filter: blur(16px);
+           -webkit-backdrop-filter: blur(16px);
+           border-radius: 1.5rem; /* 24px */
+       }
+
+
+       /* Primary Button Style */
+       .btn-primary {
+           background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* Blue 500 to 600 */
+           transition: all 0.3s ease;
+           box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2), 0 0 0 1px rgba(255,255,255,0.1) inset;
+       }
+       .btn-primary:hover {
+           transform: translateY(-3px) scale(1.05);
+           box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+       }
+
+
+       /* Answer Option Style */
+       .answer-option {
+           transition: all 0.2s ease;
+           border: 2px solid #334155; /* Slate 700 */
+           background-color: rgba(30, 41, 59, 0.5); /* Slate 800 with alpha */
+       }
+       .answer-option:hover {
+           background-color: rgba(51, 65, 85, 0.7); /* Slate 700 with alpha */
+           border-color: #3b82f6; /* Blue 500 */
+           transform: scale(1.02);
+       }
+       .answer-option.selected {
+           background-color: #2563eb; /* Blue 600 */
+           border-color: #60a5fa; /* Blue 400 */
+           color: white;
+           box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+       }
+
+
+       /* Progress Bar Animation */
+       .progress-bar-inner {
+           transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+       }
+     
+       /* Fade-in Animation */
+       .fade-in-up {
+           animation: fadeInUp 0.7s ease-out forwards;
+           opacity: 0;
+       }
+
+
+       @keyframes fadeInUp {
+           from {
+               opacity: 0;
+               transform: translateY(20px);
+           }
+           to {
+               opacity: 1;
+               transform: translateY(0);
+           }
+       }
+     
+       /* Loading Animation */
+       .loader {
+         width: 60px;
+         height: 60px;
+         position: relative;
+       }
+       .loader:before, .loader:after {
+         content: "";
+         position: absolute;
+         border-radius: 50%;
+         animation: pulsOut 1.8s ease-in-out infinite;
+         filter: drop-shadow(0 0 15px rgba(96, 165, 250, 0.7));
+       }
+       .loader:before {
+         width: 100%;
+         height: 100%;
+         background: rgba(96, 165, 250, 0.3);
+         top: 0;
+         left: 0;
+       }
+       .loader:after {
+         width: 70%;
+         height: 70%;
+         background: #60a5fa;
+         top: 15%;
+         left: 15%;
+         animation-delay: 0.4s;
+       }
+       @keyframes pulsOut {
+         0%, 100% { transform: scale(0.5); opacity: 0; }
+         50% { transform: scale(1); opacity: 1; }
+       }
+     
+       /* Result Card Icons */
+       .result-icon {
+           background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.2));
+           border-radius: 50%;
+           padding: 0.75rem; /* 12px */
+           display: inline-flex;
+           align-items: center;
+           justify-content: center;
+           border: 1px solid rgba(59, 130, 246, 0.2);
+       }
+
+
+       /* --- NEW EMOJI STYLES --- */
+       .emoji-circle {
+           width: 130px;
+           height: 130px;
+           border-radius: 50%;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           font-size: 5rem; /* 80px */
+           background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, rgba(30, 64, 175, 0.2) 100%);
+           border: 2px solid #3b82f6; /* Blue 500 */
+           box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3) inset;
+           animation: emoji-pop-in 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, pulse-glow 3s infinite ease-in-out 1s;
+           transform: scale(0);
+           text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+       }
+
+
+       @keyframes emoji-pop-in {
+           from {
+               transform: scale(0) rotate(-90deg);
+               opacity: 0;
+           }
+           to {
+               transform: scale(1) rotate(0deg);
+               opacity: 1;
+           }
+       }
+
+
+       @keyframes pulse-glow {
+           0%, 100% {
+               box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3) inset;
+               transform: scale(1);
+           }
+           50% {
+               box-shadow: 0 0 40px rgba(96, 165, 250, 0.7), 0 0 55px rgba(96, 165, 250, 0.4) inset;
+               transform: scale(1.05);
+           }
+       }
+      
+       /* --- LANDING PAGE ENHANCEMENTS --- */
+       #landing p {
+           text-wrap: balance;
+       }
+
+
+       .headline-accent {
+           text-shadow: 0 0 8px rgba(96, 165, 250, 0.3);
+       }
+
+
+       #landing .result-icon {
+           box-shadow: 0 0 25px rgba(96, 165, 250, 0.5);
+           animation: pulse-icon 3s infinite ease-in-out;
+       }
+
+
+       @keyframes pulse-icon {
+            0%, 100% { box-shadow: 0 0 25px rgba(96, 165, 250, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(96, 165, 250, 0.8); }
+       }
+      
+       /* Clock Animation */
+       .clock-hand {
+           stroke: #60a5fa; /* Blue-400 */
+           stroke-width: 2;
+           stroke-linecap: round;
+           transform-origin: center;
+       }
+       .hour-hand {
+           animation: rotate-hour 20s linear infinite;
+       }
+       .minute-hand {
+           animation: rotate-minute 3s linear infinite;
+       }
+
+
+       @keyframes rotate-hour {
+           from { transform: rotate(0deg); }
+           to { transform: rotate(360deg); }
+       }
+       @keyframes rotate-minute {
+           from { transform: rotate(0deg); }
+           to { transform: rotate(360deg); }
+       }
+
+
+       /* --- MODIFIED PREMIUM BORDER ANIMATION --- */
+       @property --angle {
+         syntax: '<angle>';
+         initial-value: 0deg;
+         inherits: false;
+       }
+
+
+       .premium-border {
+           position: relative;
+       }
+
+
+       .premium-border::before,
+       .premium-border::after {
+           content: '';
+           position: absolute;
+           inset: -2px; /* Border thickness */
+           z-index: -1;
+           background: conic-gradient(
+               from var(--angle),
+               rgba(59, 130, 246, 0),   /* Transparent start */
+               rgba(59, 130, 246, 0.5) 10%, /* Fade in to a soft blue */
+               rgba(96, 165, 250, 0.3) 20%, /* A slightly different, dimmer blue */
+               rgba(59, 130, 246, 0) 30%   /* Fade out to transparent */
+           );
+           border-radius: inherit; /* Match the card's border-radius */
+           animation: rotate-border 8s linear infinite; /* Slower animation */
+       }
+
+
+       .premium-border::after {
+           filter: blur(15px); /* Softer glow */
+       }
+
+
+       @keyframes rotate-border {
+           0% { --angle: 0deg; }
+           100% { --angle: 360deg; }
+       }
+     
+       /* --- SIGNATURE --- */
+       #signature {
+           position: fixed;
+           bottom: 20px;
+           right: 20px;
+           font-family: 'Dancing Script', cursive; /* MODIFIED FONT */
+           font-size: 18px; /* Slightly larger for better readability */
+           color: rgba(226, 232, 240, 0.3); /* Slate 200 with low opacity */
+           text-decoration: none;
+           z-index: 1000;
+           transition: color 0.3s ease;
+       }
+
+
+       #signature:hover {
+           color: #60a5fa; /* Blue 400 */
+       }
+
+
+   </style>
+</head>
+<body>
+   <div id="background-aurora"></div>
+
+
+   <main class="w-full max-w-3xl p-4 md:p-6 pb-24">
+       <!-- Landing Section - FIXED STRUCTURE -->
+       <section id="landing" class="fade-in-up">
+           <div class="text-center card p-8 md:p-12 premium-border">
+               <div class="mb-6 result-icon">
+                   <!-- MODIFIED: Animated Clock SVG -->
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+                       <circle cx="12" cy="12" r="9" stroke="currentColor" fill="none"/>
+                       <line x1="12" y1="12" x2="12" y2="8" class="clock-hand hour-hand" />
+                       <line x1="12" y1="12" x2="15" y2="15" class="clock-hand minute-hand" />
+                   </svg>
+               </div>
+               <!-- MODIFIED HEADLINE -->
+               <h1 class="font-bold text-white mb-4 leading-tight md:leading-normal">
+                   <span class="headline-accent block text-3xl md:text-4xl font-normal text-white tracking-wide">ปลดล็อก</span>
+                   <span class="block text-5xl md:text-7xl text-blue-400 my-1 md:my-2">"เวลาทอง"</span>
+                   <span class="headline-accent block text-3xl md:text-4xl font-normal text-white tracking-wide">ที่ซ่อนอยู่ในตัวคุณ</span>
+               </h1>
+               <p class="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto">ค้นพบนาฬิกาชีวภาพที่แท้จริงของคุณด้วยแบบทดสอบที่อิงตามหลักวิทยาศาสตร์ เพื่อเพิ่มประสิทธิภาพการทำงาน ลดความเครียด และใช้ชีวิตให้เต็มศักยภาพสูงสุด</p>
+               <button id="startTestBtn" class="btn-primary text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg">
+                   ค้นหาเวลาทอง
+               </button>
+           </div>
+       </section>
+
+
+       <!-- Quiz Section -->
+       <section id="quiz" class="hidden card p-8 md:p-12">
+           <div id="quiz-header" class="mb-6">
+               <p id="question-counter" class="text-center text-slate-400 font-semibold mb-2"></p>
+               <div class="w-full bg-slate-700 rounded-full h-3">
+                   <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-blue-400 h-3 rounded-full progress-bar-inner" style="width: 0%"></div>
+               </div>
+           </div>
+           <div id="quiz-body">
+               <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-white text-center mb-8" style="min-height: 100px;"></h2>
+               <div id="answers-grid" class="grid grid-cols-1 gap-4">
+               </div>
+           </div>
+           <div id="quiz-footer" class="flex justify-between mt-8">
+               <button id="prevBtn" class="bg-slate-700 text-white font-bold py-3 px-8 rounded-full transition hover:bg-slate-600">ย้อนกลับ</button>
+               <button id="nextBtn" class="btn-primary text-white font-bold py-3 px-8 rounded-full">ต่อไป</button>
+           </div>
+       </section>
+
+
+       <!-- Loading Section -->
+       <section id="loading" class="hidden card p-8 md:p-12 text-center">
+            <div class="loader mx-auto mb-8"></div>
+            <h2 class="text-3xl font-bold text-white mb-4">กำลังวิเคราะห์ผลลัพธ์ของคุณ...</h2>
+            <p class="text-lg text-slate-300">โปรดรอสักครู่ เรากำลังถอดรหัสนาฬิกาชีวภาพของคุณ</p>
+       </section>
+     
+       <!-- Result Section -->
+       <section id="result" class="hidden">
+           <div class="text-center card p-8 md:p-12 mb-6 fade-in-up">
+               <p class="font-semibold text-blue-400">ผลการวิเคราะห์ Chronotype ของคุณคือ</p>
+               <h2 id="result-title" class="text-5xl md:text-6xl font-bold text-white my-4"></h2>
+               <!-- MODIFIED: Container for the emoji circle -->
+               <div id="result-emoji-container" class="mx-auto my-6 flex justify-center items-center h-[130px]">
+                   <!-- Emoji will be dynamically inserted here -->
+               </div>
+               <p id="result-analysis" class="text-lg text-slate-300 max-w-xl mx-auto"></p>
+           </div>
+
+
+           <div class="grid md:grid-cols-2 gap-6 mb-6">
+               <div class="card p-8 fade-in-up" style="animation-delay: 0.2s;">
+                   <div class="flex items-center mb-4">
+                       <div class="result-icon mr-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div>
+                       <h3 class="text-2xl font-bold text-white">Blueprint เวลาทองของคุณ</h3>
+                   </div>
+                   <div id="result-blueprint" class="space-y-3 text-slate-300"></div>
+               </div>
+                <div class="card p-8 fade-in-up" style="animation-delay: 0.4s;">
+                    <div class="flex items-center mb-4">
+                        <div class="result-icon mr-4"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+                        <h3 class="text-2xl font-bold text-white">3 กลยุทธ์ "ปลดล็อกพลัง"</h3>
+                   </div>
+                   <ul id="result-wins" class="list-none space-y-3 text-slate-300"></ul>
+               </div>
+           </div>
+         
+           <div class="card p-8 bg-amber-800/10 border-amber-500/30 fade-in-up" style="animation-delay: 0.6s;">
+                <div class="flex items-center mb-4">
+                    <div class="result-icon mr-4 !bg-amber-800/20 !border-amber-500/30"><svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div>
+                    <h3 class="text-2xl font-bold text-white">กับดัก #1 ที่ต้องระวัง</h3>
+               </div>
+               <p id="result-trap" class="text-amber-200 text-lg"></p>
+           </div>
+
+
+           <!-- Upsell Section -->
+           <div id="upsell" class="text-center card p-8 md:p-12 mt-6 fade-in-up" style="animation-delay: 0.8s;">
+               <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">คุณรู้ 'เวลา' ที่สมองพีคแล้ว—แต่ประสิทธิภาพสูงสุดไม่ได้มีแค่เวลา</h2>
+               <p class="text-lg text-slate-300 mb-6 max-w-2xl mx-auto">ในฐานะ <span id="upsell-animal-name" class="font-bold text-white"></span>, Deep Psychology Test Pro จะถอดรหัส 8 มิติในตัวคุณ</p>
+             
+               <div class="border-t border-b border-slate-700 py-6 my-6 text-left max-w-lg mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                   <div class="flex items-center"><span class="mr-3 text-xl">🧬</span> DNA บุคลิกภาพ</div>
+                   <div class="flex items-center"><span class="mr-3 text-xl">⭐</span> จุดแข็ง & ⚠️ จุดอ่อน</div>
+                   <div class="flex items-center"><span class="mr-3 text-xl">💼</span> งานที่เหมาะกับคุณ</div>
+                   <div class="flex items-center"><span class="mr-3 text-xl">💕</span> ความรักและความสัมพันธ์</div>
+                   <div class="flex items-center"><span class="mr-3 text-xl">🚀</span> แผนพัฒนาตัวเองเจาะจง</div>
+                   <div class="flex items-center"><span class="mr-3 text-xl">💎</span> ข้อความลับเฉพาะคุณ</div>
+               </div>
+
+
+               <button id="upsellBtn" class="btn-primary text-white font-bold py-4 px-10 rounded-full text-xl mt-4">
+                   ดูรายละเอียดเลย
+               </button>
+           </div>
+       </section>
+
+
+       <!-- NEW: Restart button container -->
+       <div id="restart-container" class="text-center mt-8 hidden">
+           <button id="restartBtn" class="bg-transparent border border-slate-700 text-slate-400 font-bold py-3 px-8 rounded-full transition hover:bg-slate-800 hover:text-white hover:border-slate-600">
+               ทำแบบทดสอบอีกครั้ง
+           </button>
+       </div>
+
+
+   </main>
+  
+   <!-- NEW: Signature Element -->
+   <a id="signature" href="https://goonbaby.github.io/DeepPsychologyTest/" target="_blank" rel="noopener noreferrer">Go On BaBy</a>
+
+
+   <script>
+       document.addEventListener('DOMContentLoaded', () => {
+           // --- Elements ---
+           const sections = {
+               landing: document.getElementById('landing'),
+               quiz: document.getElementById('quiz'),
+               loading: document.getElementById('loading'),
+               result: document.getElementById('result')
+           };
+           const restartContainer = document.getElementById('restart-container');
+           const startTestBtn = document.getElementById('startTestBtn');
+           const prevBtn = document.getElementById('prevBtn');
+           const nextBtn = document.getElementById('nextBtn');
+           const upsellBtn = document.getElementById('upsellBtn');
+           const restartBtn = document.getElementById('restartBtn');
+           const questionCounter = document.getElementById('question-counter');
+           const progressBar = document.getElementById('progress-bar');
+           const questionText = document.getElementById('question-text');
+           const answersGrid = document.getElementById('answers-grid');
+
+
+           // --- Data ---
+           const questions = [{"text":"ในวันทำงานปกติ หลังจากตื่นนอน คุณต้องใช้เวลานานแค่ไหนถึงจะรู้สึก \"ตื่นเต็มที่\" และพร้อมสำหรับงานที่ต้องใช้ความคิด?","options":["ตื่นมาก็พร้อมลุยแทบทันที","ประมาณ 30-60 นาที","มากกว่า 1 ชั่วโมง บางทีเกือบเที่ยง"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"ถ้าไม่มีนาฬิกาปลุก ในวันหยุดคุณมักจะตื่นนอนเองตามธรรมชาติเวลากี่โมง?","options":["ก่อน 7:00 น.","7:00 - 9:00 น.","หลัง 9:00 น."],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"คุณรู้สึกอย่างไรกับการประชุมทีมตอน 9 โมงเช้า?","options":["เยี่ยมเลย! เป็นช่วงที่สมองแล่นที่สุด","พอไหว แต่ขอเป็นหลัง 10 โมงจะดีกว่า","เป็นช่วงเวลาที่ยากลำบากที่สุดของวัน"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"ถ้าคุณมีอิสระเต็มที่ในการจัดตารางงาน คุณจะเลือกทำ \"งานที่ยากและสำคัญที่สุด\" ในช่วงเวลาใด?","options":["8:00 - 12:00 น.","10:00 - 14:00 น.","15:00 น. เป็นต้นไป"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"คุณรู้สึกหมดพลังและต้องการงีบหลับมากที่สุดในช่วงเวลาใดของวัน?","options":["ช่วงบ่ายต้นๆ (13:00-15:00 น.)","ช่วงเย็นหลังเลิกงาน","แทบไม่เคยรู้สึกอยากงีบกลางวัน"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"การออกกำลังกายแบบหนักๆ ให้ผลดีกับคุณที่สุดในช่วงไหน?","options":["ตอนเช้าตรู่","ตอนกลางวัน หรือเย็น","ตอนดึก"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"คุณเริ่มรู้สึกง่วงและพร้อมที่จะเข้านอนในเวลาใด?","options":["ก่อน 22:00 น.","22:00 - 24:00 น.","หลังเที่ยงคืน"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"หลัง 4 ทุ่มไปแล้ว คุณยังมีสมาธิในการอ่านหนังสือหรือดูหนังที่ซับซ้อนได้หรือไม่?","options":["ไม่เลย สมองปิดแล้ว","พอได้บ้าง แต่ไม่ดีเท่าตอนกลางวัน","สบายมาก เป็นช่วงที่สมองทำงานได้ดี"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"คุณนิยามตัวเองว่าเป็นคนประเภทไหน?","options":["คนตื่นเช้า (Morning Person)","อยู่ระหว่างกลาง","คนกลางคืน (Night Owl)"],"scores":{"A":"lion","B":"bear","C":"wolf"}},{"text":"การนอนหลับของคุณมีคุณภาพระดับไหน?","options":["หลับลึกและสนิทดี","ตื่นกลางดึกบ้างเป็นบางครั้ง","ตื่นง่ายมากและหลับไม่ค่อยสนิท"],"scores":{"A":0,"B":1,"C":2},"type":"dolphin"},{"text":"คุณเป็นคนคิดมากหรือวิตกกังวลง่ายหรือไม่?","options":["ไม่เลย ค่อนข้างปล่อยวาง","บางครั้งในเรื่องที่สำคัญ","ใช่ ฉันมักจะคิดวนเวียนอยู่บ่อยๆ"],"scores":{"A":0,"B":1,"C":2},"type":"dolphin"},{"text":"ระดับพลังงานของคุณในแต่ละวันเป็นอย่างไร?","options":["ค่อนข้างคงที่ตลอดวัน","มีขึ้นมีลงบ้าง แต่คาดเดาได้","ผันผวนมาก มาเป็นช่วงๆ สั้นๆ"],"scores":{"A":0,"B":1,"C":2},"type":"dolphin"}];
+           const resultsData = {
+               lion:   { title:"สิงโต (The Lion)", emoji:"🦁", analysis:"คุณคือ สิงโต (Lion) พลังพิเศษของคุณคือการตื่นมาพร้อมพลังสมองสูงสุดในช่วงเช้า สามารถพิชิตงานที่ยากที่สุดได้ก่อนคนอื่นดื่มกาแฟแก้วแรก แต่จงระวังคริปโทไนต์ของคุณ พลังงานจะดิ่งลงเหวหลังบ่าย 3 โมง การตัดสินใจสำคัญในช่วงเย็นคือหายนะที่รออยู่", blueprint:["<strong>6:00 - 8:00</strong> ตื่นนอนและวางแผนวัน","<strong>8:00 - 12:00</strong> <strong>ช่วงเวลาทอง! (Deep Work)</strong>","<strong>12:00 - 14:00</strong> พักผ่อนและทำงานเบาๆ","<strong>14:00 - 17:00</strong> ประชุมและงานที่ไม่ต้องใช้สมาธิสูง","<strong>21:00 - 22:00</strong> เวลาเข้านอนในอุดมคติ"], wins:["ทำงานที่สำคัญที่สุดใน 3 ชั่วโมงแรกของวัน","นัดประชุมสำคัญในช่วงเช้าที่คุณมีพลังสูงสุด","ใช้เวลาช่วงบ่ายสำหรับงานสร้างสรรค์หรืองานที่ไม่ต้องตัดสินใจหนัก"], trap:"การรับงานสำคัญหรืองานเลี้ยงสังสรรค์ในช่วงค่ำ! สำหรับชาวสิงโต นี่คือช่วงเวลาที่พลังงานและพลังการตัดสินใจต่ำที่สุด การฝืนจะทำให้คุณเหนื่อยล้าและเครียดในวันถัดไป"},
+               bear:   { title:"หมี (The Bear)",   emoji:"🐻", analysis:"คุณคือ หมี (Bear) เหมือนคนส่วนใหญ่ พลังพิเศษของคุณคือการทำงานสอดคล้องกับจังหวะของพระอาทิตย์ ทำให้คุณเป็นเพื่อนร่วมทีมที่ยอดเยี่ยม แต่จงระวังคริปโทไนต์ของคุณ การอดนอนและการกดปุ่ม Snooze ซึ่งจะทำลายจังหวะธรรมชาติและทำให้สมองของคุณมึนงงไปทั้งวัน", blueprint:["<strong>7:00 - 9:00</strong> ตื่นนอนและออกกำลังกายเบาๆ","<strong>10:00 - 14:00</strong> <strong>ช่วงเวลาทอง! (Deep & Collaborative Work)</strong>","<strong>14:00 - 16:00</strong> ทำงานที่ต้องใช้ความคิดน้อยลง","<strong>16:00 - 18:00</strong> เตรียมตัวเลิกงานและออกกำลังกาย","<strong>22:00 - 23:00</strong> เวลาเข้านอนในอุดมคติ"], wins:["เริ่มต้นวันด้วยการรับแสงแดดเพื่อปลุกนาฬิกาชีวภาพ","วางแผนงานที่ต้องใช้สมาธิสูงสุดในช่วงสายถึงบ่ายต้นๆ","หลีกเลี่ยงการทำงานหนักหลัง 4 โมงเย็น"], trap:"การกด Snooze ตอนเช้า! คือหายนะสำหรับชาวหมี การเลื่อนปลุกแม้แค่ 10 นาที จะทำลายจังหวะการตื่นตามธรรมชาติและทำให้สมองของคุณมึนงงไปอีก 2-3 ชั่วโมง วางนาฬิกาปลุกให้ไกลตัวเพื่อบังคับให้คุณลุกทันที"},
+               wolf:   { title:"หมาป่า (The Wolf)", emoji:"🐺", analysis:"คุณคือ หมาป่า (Wolf) พลังพิเศษของคุณคือความคิดสร้างสรรค์และสมาธิที่พุ่งสูงสุดในยามที่คนอื่นหมดแรงแล้ว แต่จงระวังคริปโทไนต์ของคุณ การประชุมตอนเช้าคือตัวทำลายประสิทธิภาพที่ร้ายแรงที่สุด การฝืนตื่นเช้าจะทำให้สมองของคุณทำงานได้ไม่เต็มที่ไปเกือบทั้งวัน", blueprint:["<strong>8:00 - 10:00</strong> ช่วงสมองเฉื่อย (ทำงานเบาๆ, วางแผน)","<strong>10:00 - 13:00</strong> ช่วงทำงานทั่วไป (ตอบอีเมล, ประชุม)","<strong>15:00 - 20:00</strong> <strong>ช่วงเวลาทอง! (Deep Work, Creative Task)</strong>","<strong>20:00 - 22:00</strong> ช่วงผ่อนคลาย (Socializing, Hobbies)","<strong>24:00+</strong> เวลาเข้านอนในอุดมคติ"], wins:["ปกป้องเวลาทองของคุณ สื่อสารกับทีมว่าช่วง 15:00 น. เป็นต้นไปคือ 'เวลาห้ามรบกวน'","ปรับตารางประชุม พยายามนัดหมายการประชุมสำคัญในช่วงบ่ายที่คุณตื่นตัวเต็มที่","ยอมรับธรรมชาติของคุณ เลิกกดดันตัวเองให้ตื่นเช้า การนอนให้เพียงพอตามเวลาของคุณสำคัญกว่า"], trap:"การดื่มกาแฟแก้วแรกทันทีที่ตื่นนอน! สำหรับชาวหมาป่า ร่างกายยังไม่พร้อมรับคาเฟอีนในตอนเช้า มันจะทำให้คุณใจสั่นและหมดแรงเร็วขึ้นในช่วงบ่าย ควรดื่มแก้วแรกหลัง 10:30 น. เป็นต้นไป"},
+               dolphin:{ title:"โลมา (The Dolphin)",emoji:"🐬", analysis:"คุณคือ โลมา (Dolphin) พลังพิเศษของคุณคือความสามารถในการเข้าสู่สภาวะ Deep Focus ได้อย่างรวดเร็วเมื่อมีแรงบันดาลใจ แต่จงระวังคริปโทไนต์ของคุณ การนอนหลับที่ไวต่อสิ่งกระตุ้นและความวิตกกังวล ซึ่งอาจทำให้พลังงานของคุณผันผวนอย่างมากในแต่ละวัน", blueprint:["<strong>6:30 - 8:00</strong> ตื่นนอนและทำสมาธิ หรือออกกำลังกายเบาๆ","<strong>10:00 - 12:00</strong> <strong>ช่วงเวลาทองที่ 1 (Productive Burst)</strong>","<strong>13:00 - 15:00</strong> พักผ่อนสมอง ทำงานที่ไม่เครียด","<strong>16:00 - 18:00</strong> <strong>ช่วงเวลาทองที่ 2 (Creative Burst)</strong>","<strong>22:00 - 23:30</strong> Wind-down routine (งดจอ, อ่านหนังสือ) ก่อนนอน"], wins:["สร้างกิจวัตรก่อนนอนที่ผ่อนคลายเพื่อปรับปรุงคุณภาพการนอน","ใช้เทคนิค Pomodoro (ทำงาน 25 นาที พัก 5 นาที) เพื่อจัดการพลังงานที่มาเป็นช่วงๆ","วางแผนทำงานที่สำคัญที่สุดในช่วงเวลาที่คุณรู้สึมีพลัง ไม่ว่าจะเป็นช่วงไหนของวัน"], trap:"การพยายามนอนหลับเมื่อไม่รู้สึกง่วง! สำหรับชาวโลมา การบังคับตัวเองให้นอนจะยิ่งสร้างความเครียด ควรลุกขึ้นมาทำกิจกรรมที่ผ่อนคลาย (เช่น อ่านหนังสือ) จนกว่าจะรู้สึกง่วงจริงๆ"}
+           };
+
+
+           // --- State ---
+           let currentQuestionIndex = 0;
+           let userAnswers = {};
+
+
+           // --- Functions ---
+           function showSection(sectionName) {
+               Object.values(sections).forEach(section => section.classList.add('hidden'));
+               restartContainer.classList.add('hidden'); // Hide restart button by default
+
+
+               if (sections[sectionName]) {
+                   sections[sectionName].classList.remove('hidden');
+                   // Ensure the fade-in animation re-triggers
+                   sections[sectionName].classList.remove('fade-in-up');
+                   void sections[sectionName].offsetWidth; // Trigger reflow
+                   sections[sectionName].classList.add('fade-in-up');
+               }
+
+
+               if (sectionName === 'result') {
+                   restartContainer.classList.remove('hidden'); // Show for result section
+                   restartContainer.classList.add('fade-in-up');
+               }
+           }
+
+
+           function startTest() {
+               showSection('quiz');
+               showQuestion(currentQuestionIndex);
+           }
+
+
+           function restartTest() {
+               currentQuestionIndex = 0;
+               userAnswers = {};
+               progressBar.style.width = '0%';
+               showSection('landing');
+           }
+
+
+           function showQuestion(index) {
+               const question = questions[index];
+               questionText.textContent = question.text;
+               questionCounter.textContent = `คำถามที่ ${index + 1} / ${questions.length}`;
+               progressBar.style.width = `${((index + 1) / questions.length) * 100}%`;
+             
+               answersGrid.innerHTML = '';
+               question.options.forEach((option, i) => {
+                   const optionKey = String.fromCharCode(65 + i);
+                   const button = document.createElement('button');
+                   button.className = 'answer-option p-4 rounded-xl text-left text-lg';
+                   button.textContent = option;
+                   button.dataset.key = optionKey;
+                   if (userAnswers[index] === optionKey) {
+                       button.classList.add('selected');
+                   }
+                   answersGrid.appendChild(button);
+               });
+
+
+               prevBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
+               nextBtn.textContent = index === questions.length - 1 ? 'ดูผลลัพธ์' : 'ต่อไป';
+           }
+
+
+           function selectAnswer(e) {
+               if (e.target.tagName === 'BUTTON') {
+                   const selectedKey = e.target.dataset.key;
+                   userAnswers[currentQuestionIndex] = selectedKey;
+                 
+                   document.querySelectorAll('.answer-option').forEach(btn => btn.classList.remove('selected'));
+                   e.target.classList.add('selected');
+
+
+                   if (currentQuestionIndex < questions.length - 1) {
+                       setTimeout(() => nextQuestion(), 300);
+                   }
+               }
+           }
+
+
+           function nextQuestion() {
+               if (userAnswers[currentQuestionIndex] === undefined) {
+                    questionText.animate([
+                        { transform: 'translateX(0px)' }, { transform: 'translateX(-10px)' },
+                        { transform: 'translateX(10px)' }, { transform: 'translateX(0px)' }
+                    ], { duration: 300, iterations: 1 });
+                   return;
+               }
+               if (currentQuestionIndex < questions.length - 1) {
+                   currentQuestionIndex++;
+                   showQuestion(currentQuestionIndex);
+               } else {
+                   finishQuiz();
+               }
+           }
+         
+           function previousQuestion() {
+                if (currentQuestionIndex > 0) {
+                   currentQuestionIndex--;
+                   showQuestion(currentQuestionIndex);
+               }
+           }
+         
+           function finishQuiz() {
+               showSection('loading');
+               setTimeout(() => {
+                   const resultType = calculateResult();
+                   displayResult(resultType);
+                   showSection('result');
+               }, 2500);
+           }
+
+
+           function calculateResult() {
+               const scores = { lion: 0, bear: 0, wolf: 0, dolphin: 0 };
+               questions.forEach((q, i) => {
+                   const answerKey = userAnswers[i];
+                   if (!answerKey) return;
+                   if (q.type === 'dolphin') {
+                       scores.dolphin += q.scores[answerKey];
+                   } else {
+                       const type = q.scores[answerKey];
+                       if (type) scores[type]++;
+                   }
+               });
+               if (scores.dolphin >= 4) return 'dolphin';
+               let maxScore = -1;
+               let resultType = 'bear';
+               ['lion', 'bear', 'wolf'].forEach(type => {
+                   if (scores[type] > maxScore) {
+                       maxScore = scores[type];
+                       resultType = type;
+                   }
+               });
+               return resultType;
+           }
+
+
+           function displayResult(type) {
+               const data = resultsData[type];
+               document.getElementById('result-title').textContent = data.title;
+               document.getElementById('result-analysis').textContent = data.analysis;
+
+
+               const emojiContainer = document.getElementById('result-emoji-container');
+               emojiContainer.innerHTML = ''; // Clear previous results
+               const emojiCircle = document.createElement('div');
+               emojiCircle.className = 'emoji-circle';
+               emojiCircle.textContent = data.emoji;
+               emojiContainer.appendChild(emojiCircle);
+             
+               const blueprintEl = document.getElementById('result-blueprint');
+               blueprintEl.innerHTML = '';
+               data.blueprint.forEach(item => {
+                   const p = document.createElement('p');
+                   p.innerHTML = `✓ ${item}`;
+                   blueprintEl.appendChild(p);
+               });
+
+
+               const winsEl = document.getElementById('result-wins');
+               winsEl.innerHTML = '';
+                data.wins.forEach(item => {
+                   const li = document.createElement('li');
+                   li.innerHTML = `<span class="text-blue-400 mr-2">✓</span>${item}`;
+                   winsEl.appendChild(li);
+               });
+             
+               document.getElementById('result-trap').textContent = data.trap;
+               const upsellAnimalNameEl = document.getElementById('upsell-animal-name');
+               if (upsellAnimalNameEl) {
+                   upsellAnimalNameEl.textContent = data.title;
+               }
+           }
+
+
+           // --- Event Listeners ---
+           startTestBtn.addEventListener('click', startTest);
+           prevBtn.addEventListener('click', previousQuestion);
+           nextBtn.addEventListener('click', nextQuestion);
+           answersGrid.addEventListener('click', selectAnswer);
+           upsellBtn.addEventListener('click', () => {
+               window.open('https://ddtpro.framer.website', '_blank');
+           });
+           restartBtn.addEventListener('click', restartTest);
+         
+           // --- Initial Load ---
+           showSection('landing');
+       });
+   </script>
+</body>
+</html>
